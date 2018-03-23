@@ -10,14 +10,6 @@ vis = Visualize(a)
 a.add_agents( [ (1,1,2,2) ] ) #, (1,0,2,3)
 a.add_rocks( [ (2,1),(1,2),(1,3),(1,4),(3,1),(4,1),(2,3),(3,3),(3,4) ] )
 
-
-print a.get_size()
-
-print a.check_nbors(1,1)
-print a.is_blocked(2,1)
-print a.is_blocked(1,1)
-print a.cells
-
 vis.draw_world()
 vis.draw_agents()
 
