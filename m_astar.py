@@ -75,6 +75,7 @@ def find_path(neighbour_fn,
             # skip it if we've already checked it, or if it isn't passable
             if ((extract(n) in visited) or
                 (not passable(n, constraints))):
+                print 'Nbor: ', n, (not passable(n, constraints)), (extract(n) in visited)
                 continue
 
             if not (n in todo):
@@ -93,9 +94,7 @@ def find_path(neighbour_fn,
                     todo.update(n, g + h)
                     costs[n] = (g, h)
                     parents[n] = cur
-
-            if(h == 0):
-                end = n
+            print 'Visited: ', visited
 
     # we didn't find a path
     if extract(end) not in visited:
@@ -109,4 +108,4 @@ def find_path(neighbour_fn,
     path.append(start)
     path.reverse()
 
-    return path
+    return path, len(path)

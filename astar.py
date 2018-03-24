@@ -94,4 +94,4 @@ def find_path(neighbour_fn,
     path.append(start)
     path.reverse()
 
-    return path
+    return path, (len(path) - 1)
