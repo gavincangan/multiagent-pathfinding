@@ -23,7 +23,7 @@ def find_path(neighbour_fn,
               start,
               end,
               cost = lambda pos: 1,
-              passable = lambda pos: True,
+              passable = lambda pos, constraints = None : True,
               heuristic = manhattan_dist,
               constraints = None,
               extract = extract_fn):
@@ -55,6 +55,9 @@ def find_path(neighbour_fn,
     # parents for each tile
     parents = {}
 
+    if( heuristic(start, end) == 0):
+        return [start]
+
     while todo and (extract(end) not in visited):
         cur, c = todo.pop_smallest()
 
@@ -71,7 +74,7 @@ def find_path(neighbour_fn,
         for n in neighbour_fn(cur):
             # skip it if we've already checked it, or if it isn't passable
             if ((extract(n) in visited) or
-                (not passable(n))):
+                (not passable(n, constraints))):
                 continue
 
             if not (n in todo):

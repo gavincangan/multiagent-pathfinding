@@ -10,6 +10,7 @@ class GridWorld:
         self.cells = np.zeros((h, w), dtype=int)
         self.visualize = None
         self.add_rocks(rocks)
+
         self.aindx_cpos = dict()
         self.aindx_goal = dict()
         self.yxt_res = dict()
@@ -55,13 +56,13 @@ class GridWorld:
         actions = []
         cy, cx = self.aindx_cpos[aindx]
         for step in path:
-            ty, tx, tt = step[0], step[1], step[2]
+            ty, tx = step[0], step[1]
             if(tx - cx == 1): action = Actions.RIGHT
             elif(tx - cx == -1): action = Actions.LEFT
             elif(ty - cy == 1): action = Actions.DOWN
             elif(ty - cy == -1): action = Actions.UP
             else: action = Actions.WAIT
-            print 'ToAction: ', cy, cx, ty, tx, tt, action
+            # print 'ToAction: ', cy, cx, ty, tx, tt, action
             actions.append(action)
             cy, cx = ty, tx
         return actions
@@ -86,16 +87,31 @@ class GridWorld:
     #     return nbor_cells
 
     def get_nbor_cells(self, cell_pos):
-        y, x, t = cell_pos[0], cell_pos[1], cell_pos[2]
         nbor_cells = []
-        if(x > 0):
-            nbor_cells.append((y, x-1, t+1))
-        if(x < self.w - 1):
-            nbor_cells.append((y, x+1, t+1))
-        if(y > 0):
-            nbor_cells.append((y-1, x, t+1))
-        if(y < self.h - 1):
-            nbor_cells.append((y+1, x, t+1))
+        if(len(cell_pos) == 3):
+            y, x, t = cell_pos[0], cell_pos[1], cell_pos[2]
+            if(t > MAX_STEPS):
+                raise EnvironmentError
+            if(x > 0):
+                nbor_cells.append((y, x-1, t+1))
+            if(x < self.w - 1):
+                nbor_cells.append((y, x+1, t+1))
+            if(y > 0):
+                nbor_cells.append((y-1, x, t+1))
+            if(y < self.h - 1):
+                nbor_cells.append((y+1, x, t+1))
+            nbor_cells.append((y, x, t+1))
+        elif(len(cell_pos) == 2):
+            y, x = cell_pos[0], cell_pos[1]
+            if(x > 0):
+                nbor_cells.append((y, x-1))
+            if(x < self.w - 1):
+                nbor_cells.append((y, x+1))
+            if(y > 0):
+                nbor_cells.append((y-1, x))
+            if(y < self.h - 1):
+                nbor_cells.append((y+1, x))
+            nbor_cells.append((y, x))
         return nbor_cells
 
     def check_nbors(self, y, x):
@@ -129,27 +145,25 @@ class GridWorld:
             raise Exception('Agent ' + str(aindx) + ' does not exist!')
         oy, ox = y, x
         nbors = self.check_nbors(y, x)
-        print 'DoAction: ', aindx, y, x, nbors, action,
+        # print 'DoAction: ', aindx, y, x, nbors, action,
         if(nbors[action] == UNOCCUPIED):
+        # if(nbors[action] != IS_ROCK and nbors[action] != INVALID):
             y += int(action == Actions.DOWN) - int(action == Actions.UP)
             x += int(action == Actions.RIGHT) - int(action == Actions.LEFT)
             self.aindx_cpos[aindx] = (y, x)
             self.cells[oy][ox] = 0
             self.cells[y][x] = aindx
             if(self.visualize): self.visualize.update_agent_vis(aindx)
-            print ''
         elif(action == Actions.WAIT):
             return (-1)
-            print ''
         else:
-            print '!'
             # print 'DoAction: ', aindx, y, x, nbors, action
-            # raise Exception('Cell is not unoccupied! : (' + str(y) + ',' + str(x) + ') --> ' + str(action) )
+            raise Exception('Cell is not unoccupied! : (' + str(y) + ',' + str(x) + ') --> ' + str(action) )
         return (0) if self.aindx_cpos[aindx] == self.aindx_goal[aindx] else (-1)
 
     def passable(self, cell, constraints = None):
         retValue = False
-        y, x, t = cell[0], cell[1], cell[2]
+        y, x = cell[0], cell[1]
         if(self.is_blocked(y,x)):
             retValue = False
         elif(constraints):
@@ -164,7 +178,7 @@ class GridWorld:
     # @staticmethod
     def yxt_dist_heuristic(self, a, b):
         yx_dist = abs(a[0] - b[0]) + abs(a[1] - b[1])
-        if(a[2] == ANY_TIME or b[2] == ANY_TIME ): t_dist = 0
+        if(a[2] == ANY_TIME or b[2] == ANY_TIME or yx_dist == 0 ): t_dist = yx_dist
         else: t_dist = abs(a[2] - b[2])
         return yx_dist + t_dist
 
