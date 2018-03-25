@@ -3,6 +3,7 @@ from gworld import *
 from visualize import *
 import astar
 import m_astar
+import random
 
 def get_m_astar_path(world, start, goal, constraints = None):
     ret_path = m_astar.find_path(world.get_nbor_cells,
@@ -56,32 +57,56 @@ def steptime_agtb(a, b):
     if(a[0] > b[0]): return True
     return False
 
+def tplusone(step):
+    return ( (step[0]+1, step[1], step[2]) )
+
 def get_conflicts(agents, path_seq, conflicts_db = None):
     tyx_map = dict()
-    if(not conflicts_db):
+    if(not bool(conflicts_db)):
         conflicts_db = dict()
+    random.shuffle(agents)
     for agent in agents:
         if(agent not in conflicts_db):
-            conflicts_db[agent] = []
-        for step in path_seq[agent]:
-            if(step not in tyx_map):
-                tyx_map[step] = agent
-            else:
-                otheragent = tyx_map[step]
-                conflicts_db[agent] = step
-                if(conflicts_db[otheragent]):
-                    otherconflict = conflicts_db[otheragent]
-                    if( steptime_agtb(otherconflict, step) ):
-                        conflicts_db[otheragent] = step
-                else:
-                    conflicts_db[otheragent] = step
+            conflicts_db[agent] = set()
+        if(path_seq[agent]):
+            pathlen = len(path_seq[agent])
+            for t, tstep in enumerate(path_seq[agent]):
+                twosteps = [tstep] #, tplusone(tstep)]
+                if(t > 0 ): twosteps.append( tplusone(path_seq[agent][t-1]) )
+                for step in twosteps:
+                    # print 'bTYXMap: ', tyx_map
+                    if(step not in tyx_map):
+                        tyx_map[step] = agent
+                    else:
+                        otheragent = tyx_map[step]
+                        if(step not in conflicts_db[agent] and agent!=otheragent):
+                            conflicts_db[agent].update( {step} )
+                            # if(t > 0): conflicts_db[agent].update( { tplusone( path_seq[agent][t-1] ) } )
+                        # if(bool(conflicts_db[otheragent])):
+                        #     otherconflict = conflicts_db[otheragent]
+                        #     # if( steptime_agtb(otherconflict, step) ):
+                        #     if(step not in conflicts_db[otheragent]):
+                        #         conflicts_db[otheragent].update( {step} )
+                        # else:
+                        #     conflicts_db[otheragent].update( {step} )
+                    # print 'bTYXMap: ', tyx_map
     return conflicts_db
+
+def evaluate_path(path_seq, agent, conflicts_db):
+    all_okay = True
+    tpath = path_seq[agent]
+    tconstraints = conflicts_db[agent]
+    for constraint in tconstraints:
+        if(constraint in tpath):
+            all_okay = False
 
 def search(agents, world):
     path_seq = dict()
     pathcost = dict()
     agent_goal = dict()
     max_pathlen = 0
+    restart_loop = False
+
     for agent in agents:
         start = world.aindx_cpos[agent]
         goal = world.aindx_goal[agent]
@@ -89,25 +114,71 @@ def search(agents, world):
         pathlen, path_seq[agent] = path_spacetime_conv( pathseq_yx )
         max_pathlen = pathlen if pathlen > max_pathlen else max_pathlen
 
-
     conflicts_db = get_conflicts(agents, path_seq)
-    while(True):
+
+    iter_count = 1
+    pickd_agents = []
+    while(True): # iter_count < 5):
         max_pathlen = get_max_pathlen(agents, path_seq)
         path_seq = path_equalize(agents, path_seq, max_pathlen)
 
-        for agent in agents:
+        if(iter_count % 2 == 1):
+            pickd_agents = []
+            nagents = len(agents)
+            random.shuffle(agents)
+            pickd_agents = agents[(nagents/2):]
+        else:
+            temp_pickd_agents = []
+            for agent in agents:
+                if agent not in pickd_agents:
+                    temp_pickd_agents.append(agent)
+            pickd_agents = temp_pickd_agents
+
+        conflicts_db = get_conflicts(agents, path_seq, conflicts_db)
+
+        if(restart_loop):
+            for agent in agents:
+              conflicts_db[agent] = set()
+              path_seq[agent] = []
+
+        restart_loop = False
+        for agent in pickd_agents:
             if agent in conflicts_db:
                 constraints = conflicts_db[agent]
-                start = cell_spacetime_conv(world.aindx_cpos[agent], 0)
-                goal = cell_spacetime_conv(world.aindx_goal[agent], max_pathlen)
-                path_seq[agent], mpathcost = get_m_astar_path(world, start, goal, constraints)
+                constraints.update({})
+                if(bool(constraints)):
+                    start = cell_spacetime_conv(world.aindx_cpos[agent], 0)
+                    goal = cell_spacetime_conv(world.aindx_goal[agent], SOMETIME)
+                    print 'Agent',agent,': S',start, ' G', goal, '\n\t  C', constraints, '\n\t  OP', path_seq[agent]
+                    nw_path, nw_pathlen = get_m_astar_path(world, start, goal, constraints)
+                    if(nw_path):
+                        path_seq[agent] = nw_path
+                        evaluate_path(path_seq, agent, conflicts_db)
+                    else:
+                        path_seq[agent] = [start]
+                        restart_loop = True
+                    print 'Agent',agent,': S',start, ' G', goal, '\n\t  C', constraints, '\n\t  NP', nw_path, 'Len: ', nw_pathlen
 
         conflicts_db = get_conflicts(agents, path_seq, conflicts_db)
 
         break_loop = True
         for agent in agents:
-            if(conflicts_db[agent]):
+            ubrokn_conflicts = []
+            constraints = conflicts_db[agent]
+            for step in path_seq[agent]:
+                if(step in constraints):
+                    ubrokn_conflicts.append(step)
+            if(ubrokn_conflicts):
+                print '## A', agent, 'UC:', ubrokn_conflicts
+                print 'Yes, there are conflicts!'
                 break_loop = False
+        iter_count = iter_count + 1
+
+        if(break_loop or restart_loop):
+            print 'Loop break!'
+            break
+
+        # something = input('Press any key to continue...')
 
     for agent in agents:
         print '\nAgent ', agent, ' cost:',pathcost[agent], ' Path -- ', path_seq[agent]
@@ -115,3 +186,5 @@ def search(agents, world):
     for agent in agents:
         if agent in conflicts_db:
             print '\nAgent ', agent, ' Conflicts -- ', conflicts_db[agent]
+
+    return path_seq

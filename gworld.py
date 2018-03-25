@@ -47,7 +47,7 @@ class GridWorld:
                     else:
                         raise Exception('Cell has already been occupied!')
                 else:
-                    raise Exception( 'Failure! agent index:' + str(nagents + 1) )
+                    raise Exception( 'Failure! agent index: ' + str(nagents + 1) )
                     return False
             return True
         return False
@@ -91,6 +91,7 @@ class GridWorld:
         if(len(cell_pos) == 3):
             t, y, x= cell_pos[0], cell_pos[1], cell_pos[2]
             if(t > MAX_STEPS):
+                print 'cell = ', cell_pos
                 raise EnvironmentError
             if(x > 0):
                 nbor_cells.append((t+1, y, x-1))
@@ -167,19 +168,23 @@ class GridWorld:
             t, y, x = cell[0], cell[1], cell[2]
             if(self.is_blocked(y,x)):
                 retValue = False
-            elif(constraints):
+            elif(t > tLIMIT):
+                retValue = False
+            elif(bool(constraints)):
                 if(cell in constraints):
                     retValue = False
                 else:
                     retValue = True
             else:
                 retValue = True
+            # if(bool(constraints)):
+            #     print '\n ##', cell, '::', constraints,' RETURN:' ,retValue
             return retValue
         elif(len(cell) == 2):
             y, x = cell[0], cell[1]
             if(self.is_blocked(y,x)):
                 retValue = False
-            elif(constraints):
+            elif(bool(constraints)):
                 if(cell in constraints):
                     retValue = False
                 else:
@@ -191,9 +196,9 @@ class GridWorld:
     # @staticmethod
     def tyx_dist_heuristic(self, a, b):
         yx_dist = abs(a[1] - b[1]) + abs(a[2] - b[2])
-        if(a[0] == ANY_TIME or b[0] == ANY_TIME or yx_dist == 0 ): t_dist = yx_dist
-        else: t_dist = abs(a[2] - b[2])
-        return yx_dist + t_dist
+        if(a[0] == ANY_TIME or b[0] == ANY_TIME): t_dist = yx_dist/WAIT_FACTOR
+        else: t_dist = ( abs(a[2] - b[2]) ) * int(yx_dist>0)
+        return yx_dist + t_dist/WAIT_FACTOR
 
     def get_size(self):
         return (self.h, self.w)

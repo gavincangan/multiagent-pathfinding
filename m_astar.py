@@ -17,7 +17,8 @@ def manhattan_dist(a, b):
 
 def extract_fn(a):
     # print 'a :', a, 'Extract :', a[:-1]
-    return a[:-1]
+    return a
+    # return a[1:]
 
 def find_path(neighbour_fn,
               start,
@@ -55,18 +56,14 @@ def find_path(neighbour_fn,
     # parents for each tile
     parents = {}
 
-    if( heuristic(start, end) == 0):
+    if( heuristic(start, end) == 0 ):
         return [start]
 
     while todo and (extract(end) not in visited):
         cur, c = todo.pop_smallest()
 
-        # tcur = cur
-        # cur_chain = [cur]
-        # while(tcur != start):
-        #     cur_chain.append(parents[tcur])
-        #     tcur = parents[tcur]
-        # print 'Current :', cur, '\tChain: ', cur_chain
+        # print 'Current: ', cur, 'cost: ', sum(costs[cur])
+        # something = input('Press some key to continue...')
 
         visited.add(extract(cur))
 
@@ -75,7 +72,7 @@ def find_path(neighbour_fn,
             # skip it if we've already checked it, or if it isn't passable
             if ((extract(n) in visited) or
                 (not passable(n, constraints))):
-                print 'Nbor: ', n, (not passable(n, constraints)), (extract(n) in visited)
+                # print 'Nbor: ', n, (not passable(n, constraints)), (extract(n) in visited)
                 continue
 
             if not (n in todo):
@@ -94,11 +91,12 @@ def find_path(neighbour_fn,
                     todo.update(n, g + h)
                     costs[n] = (g, h)
                     parents[n] = cur
-            print 'Visited: ', visited
+            # print '\nVisited: ', visited
+            # print '\nParents: ', parents
 
     # we didn't find a path
     if extract(end) not in visited:
-        return []
+        return [], 32767
 
     # build the path backward
     path = []
@@ -108,4 +106,4 @@ def find_path(neighbour_fn,
     path.append(start)
     path.reverse()
 
-    return path, len(path)
+    return path, sum(costs[start])
