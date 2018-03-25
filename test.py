@@ -21,15 +21,14 @@ def get_m_astar_path(world, start, goal, constraints = None):
 
 ## 2 agents. Narrow path with a open slot on the wall
 ## Waits too long. Need better conflict handling
-# a = GridWorld(6,10)
-# a.add_rocks( [ (1,0),(1,1),(1,2),(1,3),(1,4),(2,5),(1,6),(1,7),(1,8),(1,9),(0,9) ] )
-# a.add_agents( [ (0,0,0,8), (0,1,0,7) ] )
+a = GridWorld(6,10)
+a.add_rocks( [ (1,0),(1,1),(1,2),(1,3),(1,4),(2,5),(1,6),(1,7),(1,8),(1,9),(0,9) ] )
+a.add_agents( [ (0,0,0,8), (0,1,0,7) ] )
 
 ## 3 agents. Few rocks. More space to swerve around
-a = GridWorld(6,10)
+# a = GridWorld(6,10)
 # a.add_rocks( [ (4,0),(4,1),(4,2),(1,7),(1,8),(1,9) ] )
-a.add_rocks( [ (4,0),(4,1),(4,2),(4,3),(1,6),(1,7),(1,8),(1,9) ] )
-a.add_agents( [ (0,7,5,1), (5,3,0,9), (0,3,5,9) ] )
+# a.add_agents( [ (0,7,5,1), (5,3,0,9), (0,3,5,9) ] )
 
 ## 3 agents. Single passable block
 # a = GridWorld(6,10)
@@ -79,7 +78,7 @@ for agent in agents:
     path_maxlen = path_len if (path_len > path_maxlen) else path_maxlen
     action_seq[agent] = a.path_to_action(agent, path_seq[agent])
 
-something = input('Press some key to continue...')
+something = input('Press 2 + <Return> to continue...')
 
 for step in range(path_maxlen):
     for agent in agents:

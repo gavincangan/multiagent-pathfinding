@@ -134,16 +134,22 @@ def search(agents, world):
                     temp_pickd_agents.append(agent)
             pickd_agents = temp_pickd_agents
 
+        if(restart_loop):
+            restart_loop = False
+            print '\n\nStuck between a rock and a hard place?\nRapid Random Restart to the rescue!\n\n'
+            something = input('Press 1 + <Return> to continue...')
+            for agent in agents:
+                conflicts_db[agent] = set()
+                start = world.aindx_cpos[agent]
+                goal = world.aindx_goal[agent]
+                pathseq_yx, pathcost[agent] = get_astar_path(world, start, goal)
+                pathlen, path_seq[agent] = path_spacetime_conv( pathseq_yx )
+                max_pathlen = pathlen if pathlen > max_pathlen else max_pathlen
+
         conflicts_db = get_conflicts(agents, path_seq, conflicts_db)
 
-        if(restart_loop):
-            for agent in agents:
-              conflicts_db[agent] = set()
-              path_seq[agent] = []
-
-        restart_loop = False
         for agent in pickd_agents:
-            if agent in conflicts_db:
+            if (agent in conflicts_db):
                 constraints = conflicts_db[agent]
                 constraints.update({})
                 if(bool(constraints)):
@@ -159,7 +165,9 @@ def search(agents, world):
                         restart_loop = True
                     print 'Agent',agent,': S',start, ' G', goal, '\n\t  C', constraints, '\n\t  NP', nw_path, 'Len: ', nw_pathlen
 
-        conflicts_db = get_conflicts(agents, path_seq, conflicts_db)
+        if not restart_loop:
+            path_seq = path_equalize(agents, path_seq, SOMETIME)
+            conflicts_db = get_conflicts(agents, path_seq, conflicts_db)
 
         break_loop = True
         for agent in agents:
@@ -172,9 +180,12 @@ def search(agents, world):
                 print '## A', agent, 'UC:', ubrokn_conflicts
                 print 'Yes, there are conflicts!'
                 break_loop = False
+            goal = cell_spacetime_conv(world.aindx_goal[agent], SOMETIME)
+            if(path_seq[agent][-1] != goal):
+                break_loop = False
         iter_count = iter_count + 1
 
-        if(break_loop or restart_loop):
+        if(break_loop and not restart_loop):
             print 'Loop break!'
             break
 
