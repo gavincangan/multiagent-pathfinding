@@ -1,4 +1,5 @@
-# ECE6504 - Autonomous Coordination
+# ECE6504 Autonomous Coordination - Presentation One
+# Centralized methods for Multi-Agent Path Finding
 
 Implementation of Multi-Agent Path Finding in a gridworld simulation.
 
