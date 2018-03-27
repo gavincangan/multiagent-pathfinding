@@ -1,4 +1,4 @@
-# ECE6405 Autonomous Coordination
+# ECE6504 - Autonomous Coordination
 
 Implementation of Multi-Agent Path Finding in a gridworld simulation.
 
