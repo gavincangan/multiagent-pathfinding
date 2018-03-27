@@ -137,7 +137,7 @@ def search(agents, world):
         if(restart_loop):
             restart_loop = False
             print '\n\nStuck between a rock and a hard place?\nRapid Random Restart to the rescue!\n\n'
-            something = input('Press 1 + <Return> to continue...')
+            # something = input('Press 1 + <Return> to continue...')
             for agent in agents:
                 conflicts_db[agent] = set()
                 start = world.aindx_cpos[agent]
