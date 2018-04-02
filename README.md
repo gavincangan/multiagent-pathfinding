@@ -16,5 +16,4 @@ Implementation of Multi-Agent Path Finding in a gridworld simulation.
 - Link to YouTube video: https://youtu.be/b5KMm729b_4
 
 --
-The priority queue in A* is from a gridworld simluator on GitHub: https://github.com/TheLastBanana
-And implementation of A* is based on an implementation in the same repository.
+The A* priority queue is from this gridworld simluator on GitHub: https://github.com/TheLastBanana
